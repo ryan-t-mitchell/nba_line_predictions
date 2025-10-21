@@ -90,7 +90,6 @@ async def predict(data: Input_List):
     return {"home_team_plus_minus_predictions": predictions_list}
 
 
-
 @app.get("/health")
 async def datetime():
     return dt.now()
