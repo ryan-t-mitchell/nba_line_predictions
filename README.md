@@ -10,24 +10,43 @@ In order to bring the project to life, I have collaborated with a friend who bui
 
 Give it a try! Running this CURL command will give you the predicted game betting line for a game:
 
-```curl -X POST -H 'Content-Type: application/json' http://ec2-35-172-137-50.compute-1.amazonaws.com:8000/predict -d '{"games": [{"home_team_days_rest": 1.0, "home_team_home_prior": 0.0, "home_team_sos": 14.901234567901234, "home_team_sos_last_10": 17.2, "home_team_win_pct": 0.5308641975308642, "home_team_win_pct_last_10": 0.5, "home_team_3pt_pct": 0.3425925925925926, "home_team_2pt_pct": 0.5385365853658537, "home_team_pp100p": 109.57242744879647, "home_team_orb_pct": 0.21107544141252, "home_team_drb_pct": 0.6857142857142857, "home_team_opp_3pt_pct": 0.3672903672903673, "home_team_opp_2pt_pct": 0.5694227769110765, "home_team_opp_pp100p": 109.99381570810142, "away_team_days_rest": 1.0, "away_team_home_prior": 0.0, "away_team_sos": 14.728395061728396, "away_team_sos_last_10": 13.7, "away_team_win_pct": 0.419753086419753, "away_team_win_pct_last_10": 0.5, "away_team_3pt_pct": 0.3458466453674121, "away_team_2pt_pct": 0.5399553571428571, "away_team_pp100p": 108.21244455101306, "away_team_orb_pct": 0.2216815355501487, "away_team_drb_pct": 0.7177635098983414, "away_team_opp_3pt_pct": 0.3503014065639652, "away_team_opp_2pt_pct": 0.5662888122227698, "away_team_opp_pp100p": 110.53451581975072}]}'```
+```
+curl -X POST -H 'Content-Type: application/json' http://ec2-35-172-137-50.compute-1.amazonaws.com:8000/predict -d '{"games": [{"home_team_days_rest": 1.0, "home_team_home_prior": 0.0, "home_team_sos": 14.901234567901234, "home_team_sos_last_10": 17.2, "home_team_win_pct": 0.5308641975308642, "home_team_win_pct_last_10": 0.5, "home_team_3pt_pct": 0.3425925925925926, "home_team_2pt_pct": 0.5385365853658537, "home_team_pp100p": 109.57242744879647, "home_team_orb_pct": 0.21107544141252, "home_team_drb_pct": 0.6857142857142857, "home_team_opp_3pt_pct": 0.3672903672903673, "home_team_opp_2pt_pct": 0.5694227769110765, "home_team_opp_pp100p": 109.99381570810142, "away_team_days_rest": 1.0, "away_team_home_prior": 0.0, "away_team_sos": 14.728395061728396, "away_team_sos_last_10": 13.7, "away_team_win_pct": 0.419753086419753, "away_team_win_pct_last_10": 0.5, "away_team_3pt_pct": 0.3458466453674121, "away_team_2pt_pct": 0.5399553571428571, "away_team_pp100p": 108.21244455101306, "away_team_orb_pct": 0.2216815355501487, "away_team_drb_pct": 0.7177635098983414, "away_team_opp_3pt_pct": 0.3503014065639652, "away_team_opp_2pt_pct": 0.5662888122227698, "away_team_opp_pp100p": 110.53451581975072}]}'
+```
 
-Historical odds data downloaded from: https://github.com/kyleskom/NBA-Machine-Learning-Sports-Betting/tree/master/Odds-Data/Odds-Data-Clean
+Historical odds data downloaded [here.](https://github.com/kyleskom/NBA-Machine-Learning-Sports-Betting/tree/master/Odds-Data/Odds-Data-Clean)
 
 ## Website
 https://air-ball.vercel.app
 
 <img max-height='400px' src='./assets/dailypicks.png'>
 
-## Data Gathering Steps
-1. First, run the final_team_stats.ipynb file, which pings the NBA API for relevant box score data which will feed into our final feature set.
-2. Next, download historical odds data from the repo linked above (2015-16 through 2021-22 seasons).
-3. Run the odds.ipynb file, which concatenates historical odds data into a single dataframe for processing. For 2022-23 and later seasons, scrape the sports betting sites and append the mode of the home team spread values.
-4. Construct the training data set using the NBA API data and the odds data (construct_training_set.ipynb).
+## Architecture Overview
 
-## Modeling
-1. Our initial model (created in initial_model.ipynb) generates a random forest machine learning model using the HOME SPREAD from the betting sites, along with custom features that I engineered. This initial model failed to outperform a model using just the HOME SPREAD. Perhaps unsurprisingly, the HOME SPREAD feature was by far the most important feature (feature importance: 0.81) in our model. Given that we are trying to outperform the spread by a large enough margin to profit on NBA bets, we needed to drop this feature from our training set and develop a different approach (additional model types, new features, and robust cross validation across multiple time horizons).
-2. Run the final_model_dev.ipynb notebook, which generates a series of random forest, neural network, and XGBoost models. These model predictions are ultimately used as features in a meta-model using linear regression for a final prediction.
+### **Docker Containerization**
+- **Multi-stage build process**: Uses a build stage for dependency compilation and a slim production stage for optimal image size
+- **Poetry dependency management**: Handles Python package dependencies with virtual environment isolation
+- **Health checks**: Built-in container health monitoring via `/health` endpoint
+- **Portable deployment**: Containerized application runs consistently across development and production environments
+
+### **FastAPI Web Framework**
+- **RESTful API**: Provides `/predict` endpoint for real-time NBA game predictions
+- **Pydantic data validation**: Ensures type safety and data integrity for input/output models
+- **Async support**: High-performance async request handling with uvicorn server
+- **Production-ready**: Built-in health checks and error handling
+
+### **AWS Cloud Infrastructure**
+- **EC2 deployment**: Hosts the containerized FastAPI application on AWS Elastic Compute Cloud
+- **Docker Hub integration**: Automated image distribution via `rmitchell88/nba:1.0`
+- **Public API access**: Exposes prediction service at `http://ec2-35-172-137-50.compute-1.amazonaws.com:8000`
+- **Scalable architecture**: Container-based design allows for easy horizontal scaling
+- **Security**: Configured with proper port access (8000) and SSH key authentication
+
+### **End-to-End Workflow**
+1. **Development**: Local model training and FastAPI development
+2. **Containerization**: Docker build and push to Docker Hub
+3. **Deployment**: SSH into EC2, pull image, and run containerized service
+4. **Integration**: Frontend application calls the deployed API for real-time predictions
 
 ## Build Process
 ```
@@ -93,3 +112,13 @@ apt install awscli -->
 docker pull rmitchell88/nba:1.0
 docker run --rm --name nba_project -p 8000:8000 -d rmitchell88/nba:1.0
 ```
+
+## Data Gathering Steps
+1. First, run the final_team_stats.ipynb file, which pings the NBA API for relevant box score data which will feed into our final feature set.
+2. Next, download historical odds data from the repo linked above (2015-16 through 2021-22 seasons).
+3. Run the odds.ipynb file, which concatenates historical odds data into a single dataframe for processing. For 2022-23 and later seasons, scrape the sports betting sites and append the mode of the home team spread values.
+4. Construct the training data set using the NBA API data and the odds data (construct_training_set.ipynb).
+
+## Modeling
+1. Our initial model (created in initial_model.ipynb) generates a random forest machine learning model using the HOME SPREAD from the betting sites, along with custom features that I engineered. This initial model failed to outperform a model using just the HOME SPREAD. Perhaps unsurprisingly, the HOME SPREAD feature was by far the most important feature (feature importance: 0.81) in our model. Given that we are trying to outperform the spread by a large enough margin to profit on NBA bets, we needed to drop this feature from our training set and develop a different approach (additional model types, new features, and robust cross validation across multiple time horizons).
+2. Run the final_model_dev.ipynb notebook, which generates a series of random forest, neural network, and XGBoost models. These model predictions are ultimately used as features in a meta-model using linear regression for a final prediction.
